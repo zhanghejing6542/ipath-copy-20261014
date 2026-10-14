@@ -1,0 +1,1759 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>iπ · 内向作为一种逛公园的方式</title>
+  <style>
+    @font-face {
+      font-family: "Taipei Sans";
+      src: url("assets/optimized-v1/fonts/TaipeiSans-Light.woff2") format("woff2");
+      font-weight: 300;
+      font-style: normal;
+      font-display: swap;
+    }
+
+    @font-face {
+      font-family: "Taipei Sans";
+      src: url("assets/optimized-v1/fonts/TaipeiSans-Regular.woff2") format("woff2");
+      font-weight: 600;
+      font-style: normal;
+      font-display: swap;
+    }
+
+    :root {
+      --text: #26382d;
+      --muted: rgba(38, 56, 45, 0.62);
+      --faint: rgba(38, 56, 45, 0.42);
+      --paper: rgba(255, 255, 255, 0.66);
+      --paper-strong: rgba(255, 255, 255, 0.86);
+      --line: rgba(255, 255, 255, 0.82);
+      --green: #7ccd63;
+      --green-dark: #35784a;
+      --shadow: 0 26px 84px rgba(53, 74, 57, 0.16);
+      --ease: cubic-bezier(0.2, 0.72, 0.2, 1);
+    }
+
+    * { box-sizing: border-box; }
+    html, body { width: 100%; height: 100%; }
+
+    body {
+      margin: 0;
+      overflow: hidden;
+      color: var(--text);
+      font-family: "Taipei Sans", -apple-system, BlinkMacSystemFont, "PingFang SC", sans-serif;
+      font-weight: 300;
+      background: #f8faf3;
+      cursor: auto;
+    }
+
+    button, textarea, select { font: inherit; }
+    button {
+      border: 0;
+      appearance: none;
+      cursor: pointer;
+    }
+
+    .app {
+      position: relative;
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
+      isolation: isolate;
+      background: #f8faf3;
+    }
+
+    .bg {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+      background: url("assets/optimized-v1/background/1.webp") center / cover no-repeat;
+      filter: blur(6px) saturate(0.86) brightness(1.06);
+      transform: scale(1.035);
+    }
+
+    .bg::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background:
+        linear-gradient(180deg, rgba(242, 250, 235, 0.34), rgba(232, 243, 224, 0.38)),
+        rgba(42, 77, 48, 0.08);
+    }
+
+    .bg::after {
+      content: "";
+      position: absolute;
+      inset: -15%;
+      opacity: 0.18;
+      background:
+        radial-gradient(ellipse at 18% 20%, transparent 0 18%, rgba(72, 103, 70, 0.25) 19%, transparent 32%),
+        radial-gradient(ellipse at 78% 28%, transparent 0 16%, rgba(72, 103, 70, 0.18) 17%, transparent 30%),
+        radial-gradient(ellipse at 54% 78%, transparent 0 16%, rgba(72, 103, 70, 0.16) 17%, transparent 33%);
+      filter: blur(18px);
+      animation: leafDrift 13s ease-in-out infinite alternate;
+    }
+
+    .noise {
+      position: fixed;
+      inset: 0;
+      z-index: 1;
+      pointer-events: none;
+      opacity: 0.11;
+      background-image:
+        linear-gradient(rgba(70, 98, 66, 0.12) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(70, 98, 66, 0.08) 1px, transparent 1px);
+      background-size: 3px 3px, 7px 7px;
+      mix-blend-mode: soft-light;
+    }
+
+    .topbar {
+      position: fixed;
+      top: 18px;
+      left: 24px;
+      right: 24px;
+      z-index: 30;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      pointer-events: none;
+      transition: opacity 360ms ease, transform 360ms var(--ease);
+    }
+
+    .intro-state .topbar {
+      opacity: 0;
+      transform: translateY(-8px);
+    }
+
+    .intro-state .brand,
+    .intro-state .music {
+      pointer-events: none;
+    }
+
+    .brand {
+      pointer-events: auto;
+      display: inline-flex;
+      align-items: center;
+      gap: 11px;
+      padding: 0;
+      background: transparent;
+      color: rgba(20, 39, 28, 0.96);
+      font-weight: 600;
+      text-shadow:
+        0 1px 0 rgba(255, 255, 255, 0.86),
+        0 0 18px rgba(255, 255, 255, 0.72);
+    }
+
+    .brand img {
+      width: 42px;
+      height: 42px;
+      object-fit: contain;
+      display: block;
+    }
+
+    .brand span {
+      font-size: 15px;
+      line-height: 1;
+    }
+
+    .music {
+      pointer-events: auto;
+      height: 40px;
+      min-width: 88px;
+      padding: 0 16px;
+      border-radius: 999px;
+      border: 1px solid rgba(255, 255, 255, 0.9);
+      background: rgba(255, 255, 255, 0.58);
+      color: var(--muted);
+      box-shadow: 0 12px 36px rgba(53, 74, 57, 0.1);
+      backdrop-filter: blur(18px);
+    }
+
+    .stage {
+      position: fixed;
+      inset: 0;
+      z-index: 10;
+      opacity: 0;
+      pointer-events: none;
+      transform: translateY(18px) scale(0.992);
+      transition: opacity 500ms ease, transform 640ms var(--ease), clip-path 640ms var(--ease);
+      clip-path: inset(5% 5% 5% 5% round 28px);
+    }
+
+    .stage.active {
+      opacity: 1;
+      pointer-events: auto;
+      transform: translateY(0) scale(1);
+      clip-path: inset(0 0 0 0 round 0);
+    }
+
+    .screen {
+      position: relative;
+      width: 100%;
+      height: 100%;
+    }
+
+    .intro {
+      display: grid;
+      place-items: center;
+      background: #fbfcf8;
+      cursor: pointer;
+    }
+
+    .intro::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(circle at 52% 44%, rgba(193, 224, 151, 0.24), transparent 28%),
+        linear-gradient(110deg, transparent, rgba(121, 172, 106, 0.1), transparent);
+    }
+
+    .intro-content {
+      position: relative;
+      display: grid;
+      justify-items: center;
+      gap: 26px;
+      padding: 28px;
+    }
+
+    .intro-logo {
+      width: clamp(62px, 8vw, 108px);
+      aspect-ratio: 1;
+      object-fit: contain;
+      opacity: 0;
+      filter: blur(10px);
+      transform: translateY(18px) scale(0.96);
+      animation: logoIn 900ms var(--ease) 120ms forwards;
+    }
+
+    .intro-line {
+      overflow: hidden;
+      white-space: nowrap;
+      font-size: clamp(18px, 2.2vw, 30px);
+      line-height: 1.35;
+    }
+
+    .intro-line span {
+      display: inline-block;
+      transform: translateX(-102%);
+      animation: lineReveal 980ms var(--ease) 720ms forwards;
+    }
+
+    .intro-hint {
+      position: fixed;
+      left: 50%;
+      bottom: 34px;
+      transform: translateX(-50%);
+      color: var(--faint);
+      font-size: 12px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      opacity: 0;
+      animation: fadeUp 700ms ease 1600ms forwards;
+    }
+
+    .ask {
+      display: grid;
+      grid-template-columns: minmax(24px, 1fr) minmax(320px, 800px) minmax(24px, 1fr);
+      align-items: center;
+      padding: 88px 0 64px;
+    }
+
+    .ask-card {
+      grid-column: 2;
+      display: grid;
+      gap: 22px;
+      justify-items: center;
+      text-align: center;
+      padding: clamp(22px, 5vw, 48px);
+    }
+
+    .ask-title {
+      margin: 0;
+      font-size: clamp(26px, 3.2vw, 44px);
+      font-weight: 300;
+      line-height: 1.22;
+      text-wrap: balance;
+    }
+
+    .search {
+      position: relative;
+      width: min(100%, 760px);
+      min-height: 66px;
+      display: grid;
+      grid-template-columns: 1fr auto;
+      align-items: center;
+      gap: 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(255, 255, 255, 0.86);
+      background: rgba(255, 255, 255, 0.62);
+      box-shadow: 0 22px 68px rgba(71, 96, 70, 0.13);
+      backdrop-filter: blur(24px);
+      padding: 9px 10px 9px 22px;
+      animation: searchSweep 760ms var(--ease) both;
+    }
+
+    .search::before {
+      content: "";
+      position: absolute;
+      left: 18px;
+      top: 50%;
+      width: 7px;
+      height: 7px;
+      border-radius: 999px;
+      background: var(--green);
+      transform: translateY(-50%);
+      box-shadow: 0 0 0 10px rgba(120, 201, 95, 0.08);
+    }
+
+    .search textarea {
+      width: 100%;
+      min-height: 42px;
+      max-height: 126px;
+      resize: none;
+      border: 0;
+      outline: 0;
+      background: transparent;
+      padding: 11px 8px 7px 18px;
+      color: var(--text);
+      font-size: 16px;
+      line-height: 1.55;
+      overflow: hidden;
+    }
+
+    .search textarea::placeholder {
+      color: rgba(38, 56, 45, 0.38);
+    }
+
+    .primary,
+    .secondary,
+    .chip,
+    .text-link {
+      cursor: pointer;
+    }
+
+    .primary {
+      height: 46px;
+      min-width: 124px;
+      padding: 0 18px;
+      border-radius: 999px;
+      color: #fff;
+      background: linear-gradient(135deg, #9fdc70, #48bd73);
+      box-shadow: 0 14px 32px rgba(65, 177, 101, 0.24);
+    }
+
+    .secondary {
+      height: 42px;
+      padding: 0 16px;
+      border-radius: 999px;
+      border: 1px solid rgba(255, 255, 255, 0.88);
+      background: rgba(255, 255, 255, 0.54);
+      color: var(--muted);
+      backdrop-filter: blur(18px);
+    }
+
+    .chip-row {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 10px;
+      width: min(100%, 760px);
+    }
+
+    .chip {
+      min-height: 38px;
+      padding: 8px 13px;
+      border-radius: 999px;
+      border: 1px solid rgba(255, 255, 255, 0.82);
+      background: rgba(255, 255, 255, 0.5);
+      color: var(--muted);
+      backdrop-filter: blur(16px);
+      transition: transform 180ms var(--ease), background 180ms ease, color 180ms ease;
+    }
+
+    .chip:hover,
+    .chip.active {
+      transform: translateY(-1px);
+      background: rgba(127, 203, 96, 0.18);
+      color: var(--green-dark);
+    }
+
+    .recommend {
+      perspective: 1700px;
+      transform-style: preserve-3d;
+      padding: 90px 0 44px;
+    }
+
+    .recommend-head {
+      position: absolute;
+      left: clamp(24px, 6vw, 96px);
+      top: clamp(78px, 13vh, 126px);
+      z-index: 8;
+      width: min(420px, 32vw);
+      pointer-events: none;
+    }
+
+    .kicker {
+      margin-bottom: 12px;
+      color: rgba(20, 39, 28, 0.78);
+      font-size: 12px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      font-weight: 600;
+      text-shadow: 0 1px 0 rgba(255, 255, 255, 0.74);
+    }
+
+    .recommend-title {
+      margin: 0;
+      font-size: clamp(22px, 3.1vw, 46px);
+      font-weight: 300;
+      line-height: 1.18;
+      text-wrap: balance;
+    }
+
+    .deck {
+      position: absolute;
+      inset: 0;
+      transform-style: preserve-3d;
+      overflow: visible;
+    }
+
+    .place-item {
+      position: absolute;
+      left: 50%;
+      top: 53%;
+      width: clamp(210px, 18.2vw, 318px);
+      aspect-ratio: 989 / 1400;
+      transform:
+        translate3d(calc(-50% + var(--x, 0px)), calc(-50% + var(--y, 0px)), var(--zdepth, 0px))
+        rotateY(var(--ry, 0deg))
+        rotateZ(var(--rz, 0deg))
+        scale(var(--scale, 1));
+      transform-origin: center;
+      opacity: var(--opacity, 1);
+      filter: blur(var(--blur, 0));
+      z-index: var(--z, 1);
+      transition: transform 520ms var(--ease), opacity 260ms ease, filter 260ms ease;
+      pointer-events: auto;
+      cursor: pointer;
+      will-change: transform, opacity, filter;
+      backface-visibility: hidden;
+    }
+
+    .place-card {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      border-radius: 12px;
+      background: #dce7cd;
+      box-shadow: 0 28px 70px rgba(48, 69, 54, 0.2);
+      transition: transform 420ms var(--ease), box-shadow 420ms var(--ease);
+      pointer-events: auto;
+      will-change: transform;
+      backface-visibility: hidden;
+    }
+
+    .place-card::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background-image: var(--poster);
+      background-size: cover;
+      background-position: center;
+      opacity: 1;
+      z-index: 1;
+      transition: opacity 220ms ease, transform 700ms var(--ease);
+      will-change: opacity, transform;
+      backface-visibility: hidden;
+    }
+
+    .place-card video {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      background: var(--poster) center / cover no-repeat;
+      opacity: 0;
+      z-index: 2;
+      transform: scale(1.01);
+      transition: opacity 220ms ease, transform 700ms var(--ease);
+      will-change: opacity, transform;
+      backface-visibility: hidden;
+    }
+
+    .place-item.is-hover {
+      transform:
+        translate3d(calc(-50% + var(--x, 0px)), calc(-50% + var(--y, 0px) - 2vh), 120px)
+        rotateY(0deg)
+        rotateZ(0deg)
+        scale(1.2);
+      opacity: 1;
+      filter: none;
+      z-index: 9999 !important;
+    }
+
+    .place-item.is-hover .place-card {
+      transform: scale(1.004);
+      box-shadow: 0 42px 110px rgba(48, 69, 54, 0.28);
+    }
+
+    .place-item.is-hover .place-card::before {
+      opacity: 1;
+      transform: scale(1.01);
+    }
+
+    .place-item.is-hover .place-card video {
+      opacity: 0;
+      transform: scale(1.01);
+    }
+
+    .place-item.is-hover .place-card.video-ready::before {
+      opacity: 0;
+    }
+
+    .place-item.is-hover .place-card.video-ready video {
+      opacity: 1;
+    }
+
+    .card-time {
+      position: absolute;
+      right: 12px;
+      bottom: 12px;
+      z-index: 3;
+      height: 34px;
+      display: inline-flex;
+      align-items: center;
+      padding: 0 12px;
+      border-radius: 999px;
+      border: 1px solid rgba(255, 255, 255, 0.52);
+      background: rgba(10, 20, 13, 0.28);
+      color: rgba(255, 255, 255, 0.9);
+      backdrop-filter: blur(12px);
+      font-size: 12px;
+      pointer-events: none;
+    }
+
+    .card-hint {
+      position: absolute;
+      left: 50%;
+      bottom: -68px;
+      width: max-content;
+      max-width: calc(100vw - 48px);
+      min-height: 0;
+      transform: translateX(-50%) translateY(10px);
+      padding: 12px 14px;
+      border-radius: 18px;
+      border: 1px solid rgba(255, 255, 255, 0.76);
+      background: rgba(255, 255, 255, 0.64);
+      color: var(--muted);
+      line-height: 1.65;
+      font-size: 13px;
+      opacity: 0;
+      box-shadow: 0 16px 44px rgba(53, 74, 57, 0.1);
+      backdrop-filter: blur(18px);
+      transition: opacity 260ms ease, transform 320ms var(--ease);
+      pointer-events: none;
+      white-space: nowrap;
+    }
+
+    .place-item.is-hover .card-hint {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    .recommend-tools {
+      position: absolute;
+      right: clamp(20px, 5vw, 82px);
+      bottom: clamp(28px, 7vh, 80px);
+      z-index: 12;
+      display: grid;
+      justify-items: end;
+      gap: 12px;
+      width: min(380px, 36vw);
+    }
+
+    .recommend-tools .chip-row {
+      justify-content: flex-end;
+      width: 100%;
+    }
+
+    .detail {
+      display: grid;
+      grid-template-columns: minmax(16px, 0.62fr) minmax(320px, 430px) minmax(360px, 660px) minmax(16px, 0.62fr);
+      align-items: center;
+      gap: clamp(22px, 4vw, 64px);
+      padding: 84px 0 52px;
+    }
+
+    .detail-bg-video {
+      display: none;
+    }
+
+    .detail::after {
+      display: none;
+    }
+
+    .detail-poster {
+      grid-column: 2;
+      position: relative;
+      z-index: 1;
+      width: min(100%, 420px);
+      aspect-ratio: 989 / 1400;
+      justify-self: end;
+      border-radius: 14px;
+      overflow: hidden;
+      background: #dfe7d6;
+      box-shadow: 0 30px 90px rgba(48, 69, 54, 0.2);
+    }
+
+    .detail-poster img,
+    .detail-poster video {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .detail-copy {
+      grid-column: 3;
+      position: relative;
+      z-index: 1;
+      display: grid;
+      gap: clamp(16px, 2.4vh, 26px);
+      max-width: 660px;
+    }
+
+    .detail-copy h2 {
+      margin: 0;
+      font-size: clamp(25px, 3.1vw, 48px);
+      font-weight: 300;
+      line-height: 1.22;
+      text-wrap: balance;
+    }
+
+    .detail-copy p {
+      margin: 0;
+      max-width: 560px;
+      color: var(--muted);
+      font-size: 15px;
+      line-height: 1.95;
+    }
+
+    .meta-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .meta {
+      min-height: 38px;
+      display: inline-flex;
+      align-items: center;
+      padding: 8px 14px;
+      border-radius: 999px;
+      border: 1px solid rgba(255, 255, 255, 0.82);
+      background: rgba(255, 255, 255, 0.48);
+      color: var(--muted);
+      backdrop-filter: blur(16px);
+      font-size: 13px;
+    }
+
+    .route {
+      width: min(100%, 620px);
+      padding: 22px;
+      border-radius: 24px;
+      border: 1px solid rgba(255, 255, 255, 0.82);
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.58), rgba(231, 244, 218, 0.34));
+      backdrop-filter: blur(18px);
+    }
+
+    .route span {
+      display: inline-block;
+      margin-bottom: 10px;
+      color: var(--faint);
+      font-size: 12px;
+      letter-spacing: 0.04em;
+    }
+
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .form .actions {
+      justify-content: center;
+      width: 100%;
+    }
+
+    .echo {
+      display: grid;
+      align-items: center;
+      justify-items: center;
+      padding: 76px clamp(18px, 4vw, 54px) clamp(20px, 4vw, 46px);
+      background: rgba(247, 250, 243, 0.34);
+      backdrop-filter: blur(26px) saturate(0.98);
+    }
+
+    .echo-card {
+      width: min(1120px, calc(100vw - 52px));
+      max-height: calc(100vh - 110px);
+      display: grid;
+      grid-template-columns: minmax(220px, 320px) minmax(320px, 1fr) minmax(230px, 0.75fr);
+      gap: clamp(18px, 2.4vw, 30px);
+      overflow: hidden;
+      padding: clamp(20px, 3vw, 30px);
+      border-radius: 30px;
+      border: 1px solid rgba(255, 255, 255, 0.86);
+      background: rgba(255, 255, 255, 0.6);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(42px) saturate(1.02);
+    }
+
+    .echo-place {
+      align-self: center;
+      width: min(100%, 300px);
+      aspect-ratio: 856 / 1141;
+      overflow: hidden;
+      border-radius: 18px;
+      background: rgba(255, 255, 255, 0.46);
+      box-shadow: 0 24px 68px rgba(48, 69, 54, 0.14);
+    }
+
+    .echo-place img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    .echo h2 {
+      margin: 0;
+      font-size: clamp(22px, 2.6vw, 34px);
+      font-weight: 300;
+      line-height: 1.28;
+    }
+
+    .echo p {
+      margin: 10px 0 0;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.85;
+    }
+
+    .form {
+      margin-top: 18px;
+      display: grid;
+      gap: 12px;
+    }
+
+    .label {
+      display: block;
+      margin-bottom: 8px;
+      color: var(--faint);
+      font-size: 12px;
+      letter-spacing: 0.04em;
+    }
+
+    .field {
+      width: 100%;
+      padding: 12px 14px;
+      border: 1px solid rgba(255, 255, 255, 0.86);
+      border-radius: 18px;
+      background: rgba(255, 255, 255, 0.56);
+      color: var(--text);
+      outline: 0;
+    }
+
+    select.field {
+      min-height: 46px;
+      appearance: none;
+      background-image:
+        linear-gradient(45deg, transparent 50%, rgba(38, 56, 45, 0.58) 50%),
+        linear-gradient(135deg, rgba(38, 56, 45, 0.58) 50%, transparent 50%);
+      background-position: calc(100% - 22px) 52%, calc(100% - 16px) 52%;
+      background-size: 6px 6px, 6px 6px;
+      background-repeat: no-repeat;
+      padding-right: 42px;
+    }
+
+    textarea.field {
+      min-height: 126px;
+      resize: none;
+      line-height: 1.8;
+    }
+
+    .reply {
+      min-height: 100%;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 20px;
+      padding: 22px;
+      border-radius: 24px;
+      border: 1px solid rgba(255, 255, 255, 0.74);
+      background: linear-gradient(150deg, rgba(248, 253, 242, 0.72), rgba(232, 244, 221, 0.44));
+    }
+
+    .reply-main {
+      margin: 0;
+      color: var(--text);
+      font-size: clamp(21px, 2.4vw, 33px);
+      line-height: 1.45;
+      text-wrap: balance;
+    }
+
+    .reply-sub {
+      margin: 0;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.8;
+    }
+
+    @keyframes logoIn {
+      to { opacity: 1; filter: blur(0); transform: translateY(0) scale(1); }
+    }
+
+    @keyframes lineReveal {
+      to { transform: translateX(0); }
+    }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translate(-50%, 8px); }
+      to { opacity: 1; transform: translate(-50%, 0); }
+    }
+
+    @keyframes searchSweep {
+      from { opacity: 0; clip-path: inset(0 50% 0 50% round 999px); transform: translateY(14px); }
+      to { opacity: 1; clip-path: inset(0 0 0 0 round 999px); transform: translateY(0); }
+    }
+
+    @keyframes leafDrift {
+      from { transform: translate3d(-1.5%, -0.8%, 0) rotate(-0.25deg) scale(1.02); }
+      to { transform: translate3d(1.2%, 1.1%, 0) rotate(0.28deg) scale(1.05); }
+    }
+
+    @media (max-width: 860px) {
+      body { cursor: auto; }
+      .topbar { top: 12px; left: 14px; right: 14px; }
+      .brand img { width: 38px; height: 38px; }
+      .brand span { font-size: 13px; }
+      .stage { clip-path: none; }
+      .ask { grid-template-columns: 16px minmax(0, 1fr) 16px; padding: 78px 0 28px; align-items: start; }
+      .search { grid-template-columns: 1fr; border-radius: 24px; padding: 12px; }
+      .search::before { display: none; }
+      .search textarea { min-height: 78px; padding: 8px; }
+      .primary { width: 100%; }
+      .recommend { padding: 74px 0 34px; }
+      .recommend-head { position: relative; left: auto; top: auto; width: calc(100vw - 32px); margin: 0 auto; }
+      .deck {
+        position: relative;
+        inset: auto;
+        height: calc(100vh - 250px);
+        min-height: 420px;
+        display: flex;
+        gap: 18px;
+        overflow-x: auto;
+        padding: 28px 22px 86px;
+        scroll-snap-type: x mandatory;
+      }
+      .place-item {
+        position: relative;
+        left: auto;
+        top: auto;
+        flex: 0 0 min(72vw, 300px);
+        width: min(72vw, 300px);
+        transform: none !important;
+        filter: none;
+        opacity: 1;
+        scroll-snap-align: center;
+      }
+      .card-hint { display: none; }
+      .recommend-tools { left: 18px; right: 18px; bottom: 24px; width: auto; justify-items: start; }
+      .recommend-tools .chip-row { justify-content: flex-start; }
+      .detail {
+        grid-template-columns: 16px minmax(0, 1fr) 16px;
+        grid-template-rows: auto auto;
+        overflow-y: auto;
+        padding: 74px 0 92px;
+      }
+      .detail-poster { grid-column: 2; justify-self: center; width: min(66vw, 270px); }
+      .detail-copy { grid-column: 2; gap: 15px; }
+      .echo { padding: 74px 16px 20px; }
+      .echo-card {
+        grid-template-columns: 1fr;
+        max-height: calc(100vh - 94px);
+        overflow-y: auto;
+      }
+      .echo-place { width: min(62vw, 260px); justify-self: center; }
+    }
+
+    @media (max-height: 760px) and (min-width: 861px) {
+      .topbar { top: 12px; }
+      .ask { padding-top: 62px; padding-bottom: 26px; }
+      .recommend { padding-top: 62px; padding-bottom: 28px; }
+      .recommend-head { top: 70px; }
+      .place-item { top: 52%; width: clamp(186px, 17vw, 266px); }
+      .detail { padding-top: 62px; padding-bottom: 38px; }
+      .detail-poster { width: min(100%, 330px); }
+      .detail-copy { gap: 14px; }
+      .route { padding: 18px; }
+      .echo-card { max-height: calc(100vh - 88px); }
+      textarea.field { min-height: 96px; }
+    }
+  </style>
+</head>
+<body class="intro-state">
+  <div class="app">
+    <div class="bg" aria-hidden="true"></div>
+    <div class="noise" aria-hidden="true"></div>
+    <header class="topbar">
+      <button class="brand" id="brandHome" aria-label="回到开场">
+        <img src="assets/brand/logo.png" alt="iπ" />
+        <span>以另一种方式在场</span>
+      </button>
+      <button class="music" id="soundToggle">music on</button>
+    </header>
+
+    <section class="stage active" id="stageIntro">
+      <div class="screen intro" id="introScreen" role="button" tabindex="0" aria-label="进入 iPath">
+        <div class="intro-content">
+          <img class="intro-logo" src="assets/brand/logo.png" alt="iπ" />
+          <div class="intro-line"><span>iπ —— 内向作为一种逛公园的方式</span></div>
+        </div>
+        <div class="intro-hint">click to enter</div>
+      </div>
+    </section>
+
+    <section class="stage" id="stageAsk">
+      <div class="screen ask">
+        <div class="ask-card">
+          <h1 class="ask-title">你此刻的心情是……</h1>
+          <div class="search">
+            <textarea id="userInput" rows="1" placeholder="想停一下，不想被打扰"></textarea>
+            <button class="primary" id="toRecommend">看地点</button>
+          </div>
+          <div class="chip-row" id="askChips"></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="stage" id="stageRecommend">
+      <div class="screen recommend">
+        <div class="recommend-head">
+          <div class="kicker">ipath / place deck</div>
+          <h2 class="recommend-title">选择一个今天你想停靠的点</h2>
+        </div>
+        <div class="deck" id="deck" aria-label="地点推荐卡片"></div>
+        <div class="recommend-tools">
+          <div class="kicker">mood filters</div>
+          <div class="chip-row" id="recommendChips"></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="stage" id="stageDetail">
+      <video class="detail-bg-video" id="detailBgVideo" muted loop playsinline preload="metadata"></video>
+      <div class="screen detail">
+        <div class="detail-poster">
+          <img id="detailPoster" alt="" />
+          <video id="detailVideo" muted loop playsinline preload="metadata"></video>
+        </div>
+        <article class="detail-copy">
+          <div class="kicker" id="detailKicker">selected place</div>
+          <h2 id="detailTitle">今天适合先在这里待一会儿</h2>
+          <p id="detailDesc">这里会根据你的输入给出一个更轻的停留方式。</p>
+          <div class="meta-row" id="detailMeta"></div>
+          <div class="route">
+            <span>20-minute suggestion</span>
+            <p id="detailRoute">先停下来，再决定是否继续往前。</p>
+          </div>
+          <div class="actions">
+            <button class="primary" id="detailCheckin">记录此刻</button>
+            <button class="secondary" id="backToRecommend">再看看别的地方</button>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <section class="stage" id="stageEcho">
+      <div class="screen echo">
+        <div class="echo-card">
+          <div class="echo-place">
+            <img id="echoPlaceImage" alt="" style="visibility: hidden" />
+          </div>
+          <div>
+            <h2>记录此刻心情</h2>
+            <p>不用写完整。只要一句话，iπ 会给一个轻一点的回应。</p>
+            <div class="form">
+              <label>
+                <span class="label">当前地点</span>
+                <select class="field" id="placeSelect"></select>
+              </label>
+              <label>
+                <span class="label">留下一句当下的心情</span>
+                <textarea class="field" id="moodInput" placeholder="比如：风有点轻，坐下来之后没那么乱了。"></textarea>
+              </label>
+              <div class="actions">
+                <button class="primary" id="replyBtn">生成一句回应</button>
+                <button class="secondary" id="sampleBtn">试一个示例</button>
+              </div>
+              <button class="secondary" id="echoBack">回到这个地点</button>
+            </div>
+          </div>
+          <aside class="reply">
+            <p class="reply-main" id="replyText">先把这句话放在这里。剩下的时间，留给你自己。</p>
+            <p class="reply-sub" id="replySub">这句回应只保留在当前页面里。</p>
+          </aside>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <audio id="bgmAudio" src="assets/audio/Sunset-Village_Beverly-Glenn-Copeland.mp3"
+    autoplay loop preload="metadata" hidden></audio>
+
+  <script>
+    const asset = name => `assets/optimized-v1/visual/${encodeURIComponent(name.replace(/\.png$/, '.webp'))}`;
+    const posterAsset = name => `assets/optimized-v1/posters/${encodeURIComponent(name.replace(/\.png$/, '.webp'))}`;
+    const videoAsset = name => `assets/optimized-v1/video/${encodeURIComponent(name)}`;
+    const previewAsset = video => video.replace('/video/', '/preview/');
+
+    const stages = {
+      intro: document.getElementById('stageIntro'),
+      ask: document.getElementById('stageAsk'),
+      recommend: document.getElementById('stageRecommend'),
+      detail: document.getElementById('stageDetail'),
+      echo: document.getElementById('stageEcho')
+    };
+
+    const body = document.body;
+    const userInput = document.getElementById('userInput');
+    const deck = document.getElementById('deck');
+
+    const spots = [
+      {
+        id: 'stepped_slope',
+        name: '阶梯坡',
+        en: 'Stepped ramp',
+        poster: posterAsset('page1.png'),
+        video: videoAsset('page1.mp4'),
+        image: asset('点位图5-阶梯坡.png'),
+        label: '更适合晒一会儿',
+        tags: ['开阔', '晒太阳', '轻活动', '适合独处'],
+        mood: ['累', '恢复', '低落', '放空'],
+        activity: ['坐', '发呆', '晒太阳', '停'],
+        env: ['阳光', '开阔', '少人'],
+        walk: 5,
+        crowd: '少',
+        desc: '缓坡的好处是身体不用太用力，也能被阳光慢慢接住。适合想恢复一点体感，但不想安排太多的时候。',
+        route: '找一个不挡路的位置坐下。前 12 分钟只晒太阳，后 8 分钟再决定要不要轻轻走一小段。',
+        hint: '适合想让身体暖一点、又不想走太远的时候。'
+      },
+      {
+        id: 'quiet_chair',
+        name: '安静椅',
+        en: 'Quiet chair',
+        poster: posterAsset('page2.png'),
+        video: videoAsset('page2.mp4'),
+        image: asset('点位图8-安静椅.png'),
+        label: '更适合坐下来',
+        tags: ['可坐', '安静', '极少人', '适合读书'],
+        mood: ['累', '安静', '恢复', '低落'],
+        activity: ['坐', '读书', '写字', '停'],
+        env: ['可坐', '少人', '安静'],
+        walk: 6,
+        crowd: '极少',
+        desc: '一张不在主路边的椅子。它不要求你进入任何场景，只是给你一个低社交压力的位置。',
+        route: '先坐 15 分钟。读不进去也没关系，最后 5 分钟再决定要不要走走。',
+        hint: '适合不想被打扰、也不想再做选择的时候。'
+      },
+      {
+        id: 'willow_road',
+        name: '河边柳道',
+        en: 'Riverside willow road',
+        poster: posterAsset('page3.png'),
+        video: videoAsset('page3.mp4'),
+        image: asset('点位图1-河边柳到.png'),
+        label: '更适合轻轻走',
+        tags: ['靠水', '树荫', '少人', '适合慢走'],
+        mood: ['烦', '乱', '焦虑', '放空'],
+        activity: ['走', '散步', '发呆', '停'],
+        env: ['水边', '树荫', '少人'],
+        walk: 8,
+        crowd: '少',
+        desc: '沿着河边柳树慢慢走一段，有水面也有树荫，适合把注意力从脑子里轻轻挪出来。',
+        route: '先沿河边柳道慢走 8 分钟，看到合适的位置就停下来。剩下的时间只看水面和树影。',
+        hint: '适合想动一动、又不想走得太用力的时候。'
+      },
+      {
+        id: 'forest_path',
+        name: '林间小道',
+        en: 'Path in woodland',
+        poster: posterAsset('page4.png'),
+        video: videoAsset('page4.mp4'),
+        image: asset('点位图9-剪秋.png'),
+        label: '更适合低输入',
+        tags: ['安静', '树荫', '极少人', '低社交压力'],
+        mood: ['烦', '乱', '累', '安静'],
+        activity: ['走', '坐', '发呆', '冥想', '读书'],
+        env: ['树荫', '安静', '少人'],
+        walk: 7,
+        crowd: '极少',
+        desc: '树荫比较完整，路也不复杂。适合暂时不接收太多信息，先把速度放慢。',
+        route: '从东侧入口慢慢走进去，不用走到最深处。停 12 分钟，再沿着树影轻轻走 8 分钟。',
+        hint: '适合脑子有点乱、又不想被打扰的时候。'
+      },
+      {
+        id: 'north_lake',
+        name: '北小湖',
+        en: 'Small lake in the north',
+        poster: posterAsset('page5.png'),
+        video: videoAsset('page5.mp4'),
+        image: asset('点位图4-北小湖.png'),
+        label: '更适合停下来',
+        tags: ['湖边', '可坐', '极少人', '适合读书'],
+        mood: ['累', '恢复', '安静', '放空'],
+        activity: ['坐', '读书', '写字', '发呆'],
+        env: ['湖边', '水边', '少人', '安静'],
+        walk: 8,
+        crowd: '极少',
+        desc: '小湖边的停留感更强。适合坐着，不急着完成任何事，也不用勉强自己走很远。',
+        route: '到湖边后先找一张不在主路边的椅子。前 15 分钟只坐着，最后 5 分钟再决定要不要走一小段。',
+        hint: '适合体力不多、想让周围安静下来的人。'
+      },
+      {
+        id: 'brook_side',
+        name: '小河边',
+        en: 'Brookside',
+        poster: posterAsset('page7.png'),
+        video: videoAsset('page7.mp4'),
+        image: asset('点位图3-小河边.png'),
+        label: '更适合看水',
+        tags: ['靠水', '较安静', '开阔', '适合发呆'],
+        mood: ['烦', '乱', '焦虑', '放空'],
+        activity: ['发呆', '坐', '走'],
+        env: ['水边', '开阔', '少人'],
+        walk: 7,
+        crowd: '少',
+        desc: '靠近水边，视野更开阔。适合先停一下，让注意力顺着水面慢慢散开。',
+        route: '先在水边坐 10 分钟，不用听音乐。之后沿旁边慢走一小圈，什么时候想停都可以。',
+        hint: '适合烦躁的时候稍微换一点节奏。'
+      },
+      {
+        id: 'birch_grove',
+        name: '白桦林',
+        en: 'Birch grove',
+        poster: posterAsset('page6.png'),
+        video: videoAsset('page6.mp4'),
+        image: asset('点位图2-白桦林.png'),
+        label: '更适合多待一会儿',
+        tags: ['自然感', '草地', '停留型', '适合独处'],
+        mood: ['恢复', '放空', '累', '低落'],
+        activity: ['发呆', '坐', '停'],
+        env: ['草地', '少人', '开阔'],
+        walk: 12,
+        crowd: '中',
+        desc: '白桦林更适合待久一点。没有强烈的动线感，找一小块边缘位置坐下就好。',
+        route: '慢慢走到白桦林，在边缘坐 12 分钟。最后几分钟活动一下肩颈，再决定什么时候离开。',
+        hint: '适合想真正停下来一会儿的时候。'
+      }
+    ];
+
+    function preloadPosters() {
+      spots.forEach(spot => {
+        const image = new Image();
+        image.decoding = 'async';
+        image.src = spot.poster;
+      });
+    }
+
+    if ('requestIdleCallback' in window) {
+      requestIdleCallback(preloadPosters, { timeout: 900 });
+    } else {
+      window.setTimeout(preloadPosters, 300);
+    }
+
+    const askSuggestions = [
+      ['有点烦，想静静', '我有点烦，想找个安静、有树荫、少人的地方坐 20 分钟。'],
+      ['想低输入', '我脑子有点乱，不想接收太多信息，想找树荫和低社交压力。'],
+      ['想靠水发呆', '我想靠水待一会儿，让注意力慢慢散开。'],
+      ['想读几页书', '我想读书，但不想被打扰，最好人少一点。'],
+      ['只想慢慢走', '我想一个人慢慢走走，不要太晒，也不要太热闹。']
+    ];
+
+    const recommendFilters = [
+      ['安静', '我想安静一点，最好人少、低社交压力。'],
+      ['靠水', '我想靠水或者看湖面，慢慢放空。'],
+      ['树荫', '我想找树荫，不要太晒。'],
+      ['可坐', '我不太想走，想找一个可以坐下来的地方。'],
+      ['慢走', '我想慢慢走，不要太赶。']
+    ];
+
+    const filterCenterRules = {
+      '我想安静一点，最好人少、低社交压力。': ['stepped_slope', 'quiet_chair', 'forest_path'],
+      '我想靠水或者看湖面，慢慢放空。': ['willow_road', 'brook_side'],
+      '我想找树荫，不要太晒。': ['willow_road', 'birch_grove', 'forest_path'],
+      '我不太想走，想找一个可以坐下来的地方。': ['quiet_chair', 'stepped_slope', 'birch_grove'],
+      '我想慢慢走，不要太赶。': ['north_lake', 'brook_side', 'forest_path']
+    };
+
+    const sampleMoods = [
+      '风有点轻，坐下来之后没那么乱了。',
+      '没做什么，就是在这里待了一会儿。',
+      '今天比想象中安静一点。',
+      '本来有点烦，现在至少不那么紧了。',
+      '水面很慢，我也跟着慢了一点。'
+    ];
+
+    const replyBank = {
+      wind: ['风已经把声音调低了一点。你不用马上回到原来的速度。', '那就先把这阵风留住。它来过，你也停过。', '风轻的时候，很多事可以先不处理。'],
+      water: ['让注意力跟着水面散开就好，不需要抓住什么。', '水边没有催你往前走。你也可以慢一点。', '这句话和水声放在一起，已经足够。'],
+      tired: ['今天不用恢复得很完整。能坐下来，已经够了。', '先把力气省下来。这里没有需要完成的事情。', '累的时候，停住不是退后，是给自己留一点余地。'],
+      messy: ['先不整理那些乱。让眼前这片树影替你占住一点视线。', '不用马上变平静。能把状态说出来，就已经轻了一点。', '这一刻先不用被解释。它可以只是被放在这里。'],
+      better: ['能松一点就很好。今天的这个地点刚好接住了你。', '不用证明自己变好了。只要这一刻比刚才轻一点，就值得留下。', '这句话会先留在这里，像一个很小的暂停。'],
+      default: ['先把这句话放在这里。剩下的时间，留给你自己。', '收到。你已经给这一刻留下了位置。', '不用写得更完整。这样已经够清楚了。', '这句话会替你记住，今天曾经慢下来过。']
+    };
+
+    let currentStage = 'intro';
+    let currentSelection = spots[0];
+    let lastInput = '';
+    let echoBackTarget = 'detail';
+    let deckCards = [];
+    let deckOffset = 0;
+    let hoveredItem = null;
+    let deckClickReadyAt = 0;
+    let deckWarmupTimer = 0;
+
+    function switchStage(next) {
+      const previousStage = currentStage;
+      Object.entries(stages).forEach(([name, el]) => el.classList.toggle('active', name === next));
+      currentStage = next;
+      body.classList.toggle('intro-state', next === 'intro');
+      body.classList.toggle('ask-state', next === 'ask');
+      body.classList.toggle('recommend-state', next === 'recommend');
+      if (previousStage === 'recommend' && next !== 'recommend') deactivateCard();
+      if (next !== 'recommend') {
+        window.clearTimeout(deckWarmupTimer);
+        pauseDeckVideos();
+      }
+      if (next === 'detail') restartMutedVideo(document.getElementById('detailVideo'));
+      if (next === 'recommend') scheduleDeckWarmup();
+      if (next !== 'detail' && next !== 'echo') pauseDetailVideos();
+      if (next === 'ask') window.setTimeout(() => userInput.focus(), 240);
+    }
+
+    function tokenScore(spot, input) {
+      const text = input || '';
+      let score = 0;
+      spot.mood.forEach(word => { if (text.includes(word)) score += 5; });
+      spot.activity.forEach(word => { if (text.includes(word)) score += 4; });
+      spot.env.forEach(word => { if (text.includes(word)) score += 3; });
+      spot.tags.forEach(word => { if (text.includes(word)) score += 2; });
+      if ((text.includes('不想走') || text.includes('走不动') || text.includes('坐')) && spot.walk <= 8) score += 3;
+      if ((text.includes('人多') || text.includes('社恐') || text.includes('不想被打扰')) && spot.crowd === '极少') score += 5;
+      if ((text.includes('水') || text.includes('湖') || text.includes('河')) && (spot.tags.includes('靠水') || spot.tags.includes('湖边'))) score += 6;
+      if ((text.includes('树') || text.includes('阴') || text.includes('不晒')) && spot.tags.includes('树荫')) score += 5;
+      if ((text.includes('读') || text.includes('书')) && spot.tags.includes('适合读书')) score += 6;
+      if ((text.includes('晒') || text.includes('阳光')) && spot.tags.includes('晒太阳')) score += 6;
+      if ((text.includes('慢走') || text.includes('散步')) && spot.tags.includes('适合慢走')) score += 5;
+      if ((text.includes('焦虑') || text.includes('烦') || text.includes('乱')) && spot.tags.includes('低社交压力')) score += 4;
+      if (text.includes('不要水') && (spot.tags.includes('靠水') || spot.tags.includes('湖边'))) score -= 9;
+      if (text.includes('太晒') && !spot.tags.includes('树荫')) score -= 5;
+      if (text.includes('不想走') && spot.walk > 8) score -= 5;
+      return score;
+    }
+
+    function sortedSpots(input) {
+      const raw = (input || '').trim() || '我有点烦，想找个安静、有树荫、少人的地方坐 20 分钟。';
+      lastInput = raw;
+      const seed = [...raw].reduce((sum, char) => sum + char.charCodeAt(0), 0);
+      const ranked = [...spots]
+        .map((spot, index) => ({ spot, score: tokenScore(spot, raw), index }))
+        .sort((a, b) => b.score - a.score || ((seed + a.index * 7) % 11) - ((seed + b.index * 7) % 11))
+        .map(item => item.spot);
+      const centerIds = filterCenterRules[raw];
+      if (!centerIds) return ranked;
+
+      const centerItems = centerIds
+        .map(id => spots.find(spot => spot.id === id))
+        .filter(Boolean);
+      const rest = ranked.filter(spot => !centerIds.includes(spot.id));
+      const result = Array(spots.length).fill(null);
+      const start = Math.round((spots.length - centerItems.length) / 2);
+      centerItems.forEach((spot, index) => {
+        result[start + index] = spot;
+      });
+      return result.map(spot => spot || rest.shift()).filter(Boolean);
+    }
+
+    function renderChips(target, list) {
+      target.innerHTML = list.map(([label, text]) => `<button class="chip" data-text="${text}">${label}</button>`).join('');
+    }
+
+    function ensureVideoSource(video) {
+      if (!video) return;
+      if (!video.getAttribute('src') && video.dataset.src) {
+        video.src = video.dataset.src;
+      }
+    }
+
+    function scheduleDeckWarmup(delay = 760) {
+      window.clearTimeout(deckWarmupTimer);
+      deckWarmupTimer = window.setTimeout(() => {
+        if (currentStage === 'recommend') warmDeckVideos();
+      }, delay);
+    }
+
+    function layoutDeck(offset = deckOffset) {
+      deckOffset = offset;
+      const total = deckCards.length;
+      if (!total) return;
+      const center = (total - 1) / 2;
+      const spread = Math.min(228, Math.max(150, window.innerWidth * 0.13));
+      let closest = null;
+      let closestAbs = Infinity;
+
+      document.querySelectorAll('.place-item').forEach(item => {
+        const index = Number(item.dataset.index);
+        const distance = index - center + offset;
+        const abs = Math.abs(distance);
+        if (abs < closestAbs) {
+          closestAbs = abs;
+          closest = item;
+        }
+        item.style.setProperty('--x', `${distance * spread}px`);
+        item.style.setProperty('--y', `${abs * 15}px`);
+        item.style.setProperty('--zdepth', `${-abs * 105}px`);
+        item.style.setProperty('--ry', `${distance * -8}deg`);
+        item.style.setProperty('--rz', `${distance * -0.35}deg`);
+        item.style.setProperty('--scale', `${Math.max(0.72, 1 - abs * 0.05)}`);
+        item.style.setProperty('--opacity', `${Math.max(0.42, 1 - abs * 0.08)}`);
+        item.style.setProperty('--blur', `${Math.max(0, abs - 2.2) * 0.45}px`);
+        item.style.setProperty('--z', `${Math.round(120 - abs * 8)}`);
+      });
+
+      if (closest) currentSelection = deckCards[Number(closest.dataset.index)] || currentSelection;
+    }
+
+    function renderDeck(cards) {
+      deck.innerHTML = '';
+      deckCards = cards;
+      deckOffset = 0;
+      hoveredItem = null;
+      deckClickReadyAt = performance.now() + 180;
+      cards.forEach((spot, index) => {
+        const item = document.createElement('article');
+        item.className = 'place-item';
+        item.dataset.id = spot.id;
+        item.dataset.index = index;
+        item.innerHTML = `
+          <div class="place-card" style="--poster: url('${spot.poster}')">
+            <video data-src="${previewAsset(spot.video)}" poster="${spot.poster}" muted loop playsinline preload="none"></video>
+            <div class="card-time">步行 ${spot.walk} 分钟</div>
+          </div>
+          <div class="card-hint">${spot.hint}</div>
+        `;
+        const video = item.querySelector('video');
+        const markVideoReady = () => revealVideoWhenPainted(video);
+        video.addEventListener('loadeddata', markVideoReady);
+        video.addEventListener('canplay', markVideoReady);
+        video.addEventListener('playing', markVideoReady);
+        video.addEventListener('error', () => item.querySelector('.place-card').classList.remove('video-ready'));
+        if (video.readyState >= 2) markVideoReady();
+        item.addEventListener('click', event => {
+          event.preventDefault();
+          event.stopPropagation();
+          if (currentStage !== 'recommend') return;
+          if (performance.now() < deckClickReadyAt) return;
+          openPlaceItem(item, spot);
+        });
+        deck.appendChild(item);
+      });
+      layoutDeck(0);
+      scheduleDeckWarmup(900);
+    }
+
+    function revealVideoWhenPainted(video) {
+      if (!video || video.readyState < 2) return;
+      const card = video.closest('.place-card');
+      const reveal = () => card?.classList.add('video-ready');
+      // Hidden video layers may not receive a frame callback until they are visible.
+      requestAnimationFrame(() => {
+        if (video.readyState >= 2 && !video.error) reveal();
+      });
+    }
+
+    function warmDeckVideos() {
+      if (!deckCards.length) return;
+      document.querySelectorAll('.place-item').forEach(item => {
+        const video = item.querySelector('video');
+        if (!video || item === hoveredItem) return;
+        ensureVideoSource(video);
+        video.preload = 'metadata';
+        revealVideoWhenPainted(video);
+      });
+    }
+
+    function restartMutedVideo(video) {
+      if (!video) return;
+      ensureVideoSource(video);
+      video.muted = true;
+      video.loop = true;
+      video.preload = 'auto';
+      if (video.readyState >= 2) revealVideoWhenPainted(video);
+      const playVideo = () => {
+        const promise = video.play();
+        if (promise) promise.then(() => revealVideoWhenPainted(video)).catch(() => revealVideoWhenPainted(video));
+      };
+      playVideo();
+    }
+
+    function activateCard(item) {
+      if (currentStage !== 'recommend') return;
+      if (!item || hoveredItem === item) return;
+      deactivateCard();
+      hoveredItem = item;
+      item.classList.add('is-hover');
+      restartMutedVideo(item.querySelector('video'));
+    }
+
+    function deactivateCard() {
+      if (!hoveredItem) return;
+      hoveredItem.classList.remove('is-hover');
+      const video = hoveredItem.querySelector('video');
+      if (video) {
+        video.pause();
+      }
+      hoveredItem = null;
+    }
+
+    function getVisualPlaceItem(clientX, clientY) {
+      const candidates = [...deck.querySelectorAll('.place-item')]
+        .map(item => {
+          const rect = item.getBoundingClientRect();
+          const contains =
+            clientX >= rect.left &&
+            clientX <= rect.right &&
+            clientY >= rect.top &&
+            clientY <= rect.bottom;
+          const centerX = rect.left + rect.width / 2;
+          const centerY = rect.top + rect.height / 2;
+          return {
+            item,
+            contains,
+            z: Number(getComputedStyle(item).zIndex) || 0,
+            distance: Math.hypot(clientX - centerX, clientY - centerY)
+          };
+        })
+        .filter(candidate => candidate.contains)
+        .sort((a, b) => b.z - a.z || a.distance - b.distance);
+
+      return candidates[0]?.item || null;
+    }
+
+    function getDeckControlBand() {
+      const items = [...deck.querySelectorAll('.place-item')];
+      if (!items.length) return null;
+      let top = Infinity;
+      let bottom = -Infinity;
+      items.forEach(item => {
+        const rect = item.getBoundingClientRect();
+        top = Math.min(top, rect.top);
+        bottom = Math.max(bottom, rect.bottom);
+      });
+      return {
+        top: top - 28,
+        bottom: bottom + 78
+      };
+    }
+
+    function isInDeckControlBand(clientY) {
+      const band = getDeckControlBand();
+      return !!band && clientY >= band.top && clientY <= band.bottom;
+    }
+
+    function updateDeckPointerFromPoint(clientX, clientY) {
+      if (currentStage !== 'recommend') return;
+      if (window.innerWidth <= 860) {
+        const item = getVisualPlaceItem(clientX, clientY);
+        if (item) activateCard(item);
+        else deactivateCard();
+        return;
+      }
+      if (!isInDeckControlBand(clientY)) {
+        deactivateCard();
+        return;
+      }
+      const rect = deck.getBoundingClientRect();
+      const ratio = Math.min(1, Math.max(0, (clientX - rect.left) / rect.width));
+      const maxOffset = Math.max(0, (deckCards.length - 1) / 2);
+      layoutDeck((0.5 - ratio) * maxOffset * 2);
+      const item = getVisualPlaceItem(clientX, clientY);
+      if (item) activateCard(item);
+      else deactivateCard();
+    }
+
+    function openPlaceItem(item, fallbackSpot) {
+      if (!item || currentStage !== 'recommend') return;
+      currentSelection = deckCards[Number(item.dataset.index)] || fallbackSpot || currentSelection;
+      renderDetail(currentSelection);
+      switchStage('detail');
+    }
+
+    function renderDetail(spot) {
+      const detailPoster = document.getElementById('detailPoster');
+      const detailVideo = document.getElementById('detailVideo');
+      detailPoster.src = spot.poster;
+      detailVideo.src = spot.video;
+      detailVideo.poster = spot.poster;
+
+      document.getElementById('detailKicker').textContent = `${spot.en} / ${spot.label}`;
+      document.getElementById('detailTitle').textContent = `今天适合先在「${spot.name}」待一会儿`;
+      document.getElementById('detailDesc').textContent = spot.desc;
+      document.getElementById('detailRoute').textContent = spot.route;
+      document.getElementById('detailMeta').innerHTML = [
+        spot.label,
+        `步行 ${spot.walk} 分钟可达`,
+        `当前人数：${spot.crowd}`,
+        ...spot.tags.slice(0, 2)
+      ].map(item => `<span class="meta">${item}</span>`).join('');
+
+      document.getElementById('placeSelect').value = spot.name;
+      prepareEchoImage(spot);
+      document.getElementById('replyText').textContent = makeReply('', spot.name);
+      document.getElementById('replySub').textContent = `记录于「${spot.name}」。这句回应只保留在当前页面里。`;
+    }
+
+    function pauseDetailVideos() {
+      ['detailVideo'].forEach(id => {
+        const video = document.getElementById(id);
+        if (video) video.pause();
+      });
+    }
+
+    function pauseDeckVideos() {
+      deck.querySelectorAll('video').forEach(video => {
+        video.pause();
+      });
+    }
+
+    function resetToIntro() {
+      window.cancelAnimationFrame(runRecommend.frame || 0);
+      window.clearTimeout(deckWarmupTimer);
+      deactivateCard();
+      pauseDeckVideos();
+      deck.innerHTML = '';
+      deckCards = [];
+      deckOffset = 0;
+      hoveredItem = null;
+      deckClickReadyAt = 0;
+      switchStage('intro');
+    }
+
+    function runRecommend(inputOverride) {
+      switchStage('recommend');
+      window.cancelAnimationFrame(runRecommend.frame);
+      runRecommend.frame = window.requestAnimationFrame(() => {
+        renderDeck(sortedSpots(inputOverride || userInput.value));
+      });
+    }
+
+    function makeReply(input, placeName) {
+      const text = (input || '').trim();
+      const place = placeName || currentSelection.name;
+      const choose = key => {
+        const list = replyBank[key] || replyBank.default;
+        const seed = [...`${text}${place}${key}`].reduce((sum, char) => sum + char.charCodeAt(0), 0);
+        return list[seed % list.length];
+      };
+      if (!text) return `先到「${place}」待一会儿。走到觉得可以停下来的地方，就停。`;
+      if (text.includes('风')) return choose('wind');
+      if (text.includes('水') || text.includes('湖') || text.includes('河')) return choose('water');
+      if (text.includes('累') || text.includes('困') || text.includes('没力')) return choose('tired');
+      if (text.includes('乱') || text.includes('烦') || text.includes('焦虑')) return choose('messy');
+      if (text.includes('好') || text.includes('舒服') || text.includes('平静') || text.includes('喜欢')) return choose('better');
+      return choose('default');
+    }
+
+    function openEcho(backTarget) {
+      echoBackTarget = backTarget || currentStage || 'detail';
+      document.getElementById('placeSelect').value = currentSelection.name;
+      updateEchoPlace(currentSelection.name);
+      switchStage('echo');
+    }
+
+    function fillPlaceSelect() {
+      document.getElementById('placeSelect').innerHTML = spots.map(spot => `<option value="${spot.name}">${spot.name}</option>`).join('');
+    }
+
+    const echoImageCache = new Map();
+    let echoImageRequest = 0;
+
+    function prepareEchoImage(spot) {
+      if (!echoImageCache.has(spot.id)) {
+        const image = new Image();
+        const ready = new Promise((resolve, reject) => {
+          image.onload = () => image.decode().then(() => resolve(image), reject);
+          image.onerror = reject;
+          image.src = spot.image;
+        }).catch(() => {
+          echoImageCache.delete(spot.id);
+          return null;
+        });
+        echoImageCache.set(spot.id, ready);
+      }
+      return echoImageCache.get(spot.id);
+    }
+
+    async function updateEchoPlace(placeName) {
+      const spot = spots.find(item => item.name === placeName) || currentSelection;
+      const request = ++echoImageRequest;
+      const img = document.getElementById('echoPlaceImage');
+      if (img.dataset.placeId === spot.id && img.complete && img.naturalWidth) {
+        img.style.visibility = 'visible';
+        return;
+      }
+      img.style.visibility = 'hidden';
+      const image = await prepareEchoImage(spot);
+      // A slower previous request must never replace the latest place image.
+      if (request !== echoImageRequest || !image) return;
+      image.id = 'echoPlaceImage';
+      image.alt = spot.name;
+      image.dataset.placeId = spot.id;
+      image.style.visibility = 'visible';
+      document.getElementById('echoPlaceImage').replaceWith(image);
+    }
+
+    function resizeTextarea(textarea) {
+      textarea.style.height = 'auto';
+      textarea.style.height = `${Math.min(textarea.scrollHeight, 126)}px`;
+    }
+
+    function enterAskFromIntro() {
+      if (currentStage === 'intro') switchStage('ask');
+    }
+
+    document.getElementById('stageIntro').addEventListener('click', enterAskFromIntro);
+    document.getElementById('introScreen').addEventListener('click', enterAskFromIntro);
+    document.getElementById('introScreen').addEventListener('keydown', event => {
+      if (event.key === 'Enter' || event.key === ' ') {
+        event.preventDefault();
+        enterAskFromIntro();
+      }
+    });
+
+    document.getElementById('brandHome').addEventListener('click', resetToIntro);
+    document.getElementById('toRecommend').addEventListener('click', () => runRecommend());
+    document.getElementById('backToRecommend').addEventListener('click', () => switchStage('recommend'));
+    document.getElementById('detailCheckin').addEventListener('click', () => openEcho('detail'));
+    document.getElementById('echoBack').addEventListener('click', () => switchStage(echoBackTarget));
+
+    userInput.addEventListener('input', () => resizeTextarea(userInput));
+    userInput.addEventListener('keydown', event => {
+      if (event.key === 'Enter' && !event.shiftKey) {
+        event.preventDefault();
+        runRecommend();
+      }
+    });
+
+    document.getElementById('askChips').addEventListener('click', event => {
+      const chip = event.target.closest('[data-text]');
+      if (!chip) return;
+      userInput.value = chip.dataset.text;
+      resizeTextarea(userInput);
+      document.querySelectorAll('#askChips .chip').forEach(item => item.classList.remove('active'));
+      chip.classList.add('active');
+      runRecommend(chip.dataset.text);
+    });
+
+    document.getElementById('recommendChips').addEventListener('click', event => {
+      const chip = event.target.closest('[data-text]');
+      if (!chip) return;
+      document.querySelectorAll('#recommendChips .chip').forEach(item => item.classList.remove('active'));
+      chip.classList.add('active');
+      userInput.value = chip.dataset.text;
+      renderDeck(sortedSpots(chip.dataset.text));
+    });
+
+    function updateDeckPointer(event) {
+      if (event.target.closest('.recommend-tools')) return;
+      updateDeckPointerFromPoint(event.clientX, event.clientY);
+    }
+
+    document.getElementById('stageRecommend').addEventListener('pointermove', updateDeckPointer);
+    document.getElementById('stageRecommend').addEventListener('pointerleave', () => deactivateCard());
+
+    deck.addEventListener('click', event => {
+      const item = event.target.closest('.place-item') || getVisualPlaceItem(event.clientX, event.clientY);
+      if (!item || !deck.contains(item)) return;
+      event.preventDefault();
+      if (currentStage !== 'recommend') return;
+      if (performance.now() < deckClickReadyAt) return;
+      openPlaceItem(item);
+    });
+
+    document.getElementById('stageRecommend').addEventListener('click', event => {
+      if (event.target.closest('.recommend-tools, .recommend-head, button, textarea, select, input')) return;
+      if (currentStage !== 'recommend') return;
+      if (performance.now() < deckClickReadyAt) return;
+      const item = getVisualPlaceItem(event.clientX, event.clientY);
+      if (!item) return;
+      event.preventDefault();
+      openPlaceItem(item);
+    }, true);
+
+    document.getElementById('placeSelect').addEventListener('change', event => {
+      updateEchoPlace(event.target.value);
+      document.getElementById('replyText').textContent = makeReply(document.getElementById('moodInput').value, event.target.value);
+      document.getElementById('replySub').textContent = `记录于「${event.target.value}」。这句回应只保留在当前页面里。`;
+    });
+
+    document.getElementById('replyBtn').addEventListener('click', () => {
+      const mood = document.getElementById('moodInput').value;
+      const place = document.getElementById('placeSelect').value;
+      document.getElementById('replyText').textContent = makeReply(mood, place);
+      document.getElementById('replySub').textContent = `记录于「${place}」。这句回应只保留在当前页面里。`;
+    });
+
+    document.getElementById('sampleBtn').addEventListener('click', () => {
+      const mood = sampleMoods[Math.floor(Math.random() * sampleMoods.length)];
+      document.getElementById('moodInput').value = mood;
+      document.getElementById('replyText').textContent = makeReply(mood, document.getElementById('placeSelect').value);
+    });
+
+    const soundToggle = document.getElementById('soundToggle');
+    const bgmAudio = document.getElementById('bgmAudio');
+    let soundOn = true;
+    const playMusic = () => {
+      if (soundOn) bgmAudio.play().catch(() => {});
+    };
+    playMusic();
+    window.addEventListener('pointerdown', () => {
+      playMusic();
+    }, { once: true });
+    soundToggle.addEventListener('click', () => {
+      soundOn = !soundOn;
+      soundToggle.textContent = soundOn ? 'music on' : 'music off';
+      if (soundOn) playMusic();
+      else {
+        bgmAudio.pause();
+        bgmAudio.currentTime = 0;
+      }
+    });
+
+    window.addEventListener('resize', () => {
+      if (currentStage === 'recommend') layoutDeck(deckOffset);
+    });
+
+    renderChips(document.getElementById('askChips'), askSuggestions);
+    renderChips(document.getElementById('recommendChips'), recommendFilters);
+    fillPlaceSelect();
+  </script>
+</body>
+</html>
